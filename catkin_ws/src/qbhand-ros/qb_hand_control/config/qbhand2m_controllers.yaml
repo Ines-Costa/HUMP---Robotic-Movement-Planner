@@ -1,0 +1,41 @@
+$(arg device_name)_joint_state_controller:
+  type: joint_state_controller/JointStateController
+  publish_rate: 100
+
+# control the qbhand motors and its relative synergy
+$(arg device_name)_synergies_trajectory_controller:
+  type: position_controllers/JointTrajectoryController
+  joints:
+    - $(arg device_name)_synergy_joint
+    - $(arg device_name)_manipulation_joint
+  constraints:  # fake values due to the adaptability
+    goal_time: 10.0
+    stopped_velocity_tolerance: 10.0
+    $(arg device_name)_synergy_joint:
+      trajectory: 10.0
+      goal: 10.0
+    $(arg device_name)_manipulation_joint:
+      trajectory: 10.0
+      goal: 10.0
+  state_publish_rate: 100
+  action_monitor_rate: 120
+  stop_trajectory_duration: 0
+
+# control the qbhand 2 with motor positions
+$(arg device_name)_motor_positions_trajectory_controller:
+ type: position_controllers/JointTrajectoryController
+ joints:
+   - $(arg device_name)_motor_1_joint
+   - $(arg device_name)_motor_2_joint
+ constraints:  # fake values due to the adaptability
+   goal_time: 10.0
+   stopped_velocity_tolerance: 10.0
+   $(arg device_name)_motor_1_joint:
+     trajectory: 10.0
+     goal: 10.0
+   $(arg device_name)_motor_2_joint:
+     trajectory: 10.0
+     goal: 10.0
+ state_publish_rate: 100
+ action_monitor_rate: 120
+ stop_trajectory_duration: 0

@@ -1,0 +1,61 @@
+<<PackageHeader(qb_device_description)>>
+<<TOC(4)>>
+
+This package is barely usable alone since it provides only templates to create more structured launch files in the derived packages (cf. [[qb_device_bringup]]).
+
+== Launch files ==
+The two launch file templates come in help when loading the description package of a device. It could seem unlikely to split the two files (and actually they are often called sequentially), but it guarantees in a [[qb_chain|multi-device system]] to be able to load every single robot description in each device namespace (which is required to setup their control nodes) and to load the whole robot model complete with [[joint_state_publisher]], [[robot_state_publisher]] and [[rviz]] only once.
+{{{#!wiki caution
+Please, use these "macros" whenever is possible to improve '''robustness''', '''readability''' and '''maintenance''' of derived packages.
+}}}
+
+<<Anchor(load_description_template)>>
+{{{
+#!clearsilver CS/NodeAPI
+name = load_description_template
+desc = This basic launch file just loads the [[urdf]] xml robot description in the `robot_description` ROS param by providing few configuration arguments.
+param {
+  0.name = model_name
+  0.type = string
+  0.desc = The name of the [[xacro]] URDF model file to be loaded, without extension (e.g. `qb_device` if it is `qb_device.urdf.xacro.`). The file must be located in the `urdf/` subdirectory of the selected `_description` package.
+  1.name = namespace
+  1.type = string
+  1.desc = The namespace prefix of joints and links, necessary with many devices (e.g. `my_device` creates a robot model composed by `my_device_joint_...` and  `my_device_link_...` elements).
+  2.name = package_prefix
+  2.type = string
+  2.desc = The base package name prefix (without "_description") where robot models are stored (e.g. `qb_device` if it is `qb_device_description`).
+}
+}}}
+
+<<Anchor(state_publisher_template)>>
+{{{
+#!clearsilver CS/NodeAPI
+name = state_publisher_template
+desc = This launch file starts the [[joint_state_publisher]] and the [[robot_state_publisher]] for the given `robot_description` loaded in the Parameter Server (under the current namespace). If specified also starts [[rviz]].
+param {
+  0.name = frequency
+  0.type = int
+  0.desc = The publish frequency in `Hz` of the joint state and the robot state publishers.
+  0.default = 100
+  1.name = package_prefix
+  1.type = string
+  1.desc = The base package name prefix (without "_description") where robot models are stored (e.g. `qb_device` if it is `qb_device_description`).
+  2.name = rviz_config
+  2.type = string
+  2.desc = The name of the [[rviz]] config file to be loaded, without extension (e.g. `qb_device` if it is `qb_device.rviz.`). The file must be located in the `rviz/` subdirectory of the selected `_description` package.
+  3.name = source_list_names
+  3.type = string
+  3.desc = The joint state source list for the [[joint_state_publisher]] (including square braces).
+  3.default = [joint_states]
+  4.name = use_joint_state_gui
+  4.type = bool
+  4.desc = Selects whether to load the [[joint_state_publisher]] joint state GUI.
+  4.default = false
+  5.name = use_rviz
+  5.type = bool
+  5.desc = Selects whether to load [[rviz]].
+  5.default = true
+}
+}}}
+
+## CategoryPackage

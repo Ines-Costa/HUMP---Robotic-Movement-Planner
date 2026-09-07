@@ -1,0 +1,9 @@
+<launch>
+  <arg name="device_name" default="" doc="The unique device name used in the urdf configurations (if not specified directly in the urdf)."/>
+  <arg name="robot_name" doc="The unique robot name."/>
+  <arg name="robot_package" doc="The base package name prefix for the robot configurations [urdf, rviz, ...]."/>
+
+  <!-- load the URDF model into the ROS Parameter Server -->
+  <param name="robot_description"
+         command="$(eval 'xacro --inorder ' + find(robot_package + '_description') + '/urdf/' + robot_name + '.urdf.xacro namespace:=' + device_name)"/>
+</launch>

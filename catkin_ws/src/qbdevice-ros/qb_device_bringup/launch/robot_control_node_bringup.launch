@@ -1,0 +1,15 @@
+<launch>
+  <!-- robot settings -->
+  <arg name="control_duration" default="0.01" doc="The duration of the control loop [s]."/>
+  <arg name="robot_activate_control" default="true" doc="Choose whether to activate robot_control or not (e.g. for sensor devices)."/>
+
+  <!-- load parameters -->
+  <param name="control_duration" type="double" value="$(arg control_duration)"/>
+  <rosparam subst_value="true">
+    robot_activate_control: $(arg robot_activate_control)
+  </rosparam>
+
+  <!-- start the control node -->
+  <node name="device_control" pkg="qb_device_control" type="qb_device_default"
+        respawn="false" output="screen" required="true"/>
+</launch>

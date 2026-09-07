@@ -1,0 +1,63 @@
+<<PackageHeader(qb_device_hardware_interface)>>
+<<TOC(4)>>
+
+This package is barely usable alone since it provides only the common features to be exploited and expanded in the derived packages (cf. [[qb_hand]] and [[qb_move]]).
+
+{{{
+#!clearsilver CS/NodeAPI
+name = qb_device_hardware_interface
+desc = This device-independent library provides all the common structures to interface both the [[qb_hand]] and the [[qb_move]] ROS packages with their related physical devices. It exploits the Communication Handler (cf. [[qb_device_driver]]) to manage the serial communication and inherits its core from the [[hardware_interface]] for the sake of compatibility with other robots which use ROS. This package paves the way for control applications (cf. [[qb_device_control]]).
+param {
+  0.name = ~actuators
+  0.type = string[]
+  0.desc = The actuator names in the `robot_description`.
+  1.name = ~device_id
+  1.type = int
+  1.desc = The device ID, in range [`1`, `128`].
+  1.default = 1
+  2.name = ~joints
+  2.type = string[]
+  2.desc = The joint names in the `robot_description`.
+  3.name = ~namespace
+  3.type = string
+  3.desc = The device namespace used to avoid name clashes among same-type devices.
+  3.default = qbdevice_<device_id>
+  4.name = ~robot_description
+  4.type = string
+  4.desc = The [[urdf]] xml robot description.
+  5.name = ~transmission
+  5.type = string
+  5.desc = The name of the current transmission derived from `transmission_interface::Transmission`: ''qbhand'' and ''qbmove'' use their own specific transmission.
+  5.default = transmission
+}
+pub {
+  0.name = /<namespace>/state
+  0.type = qb_device_msgs::StateStamped
+  0.desc = Advertise the whole device state, i.e. currents and positions for both actuators and joints, plus additional device infos.
+}
+srv_called {
+  0.name = /communication_handler/activate_motors
+  0.type = qb_device_srvs/Trigger
+  0.desc = Activates the motors of the device which ID is specified in the service request. The response `success` variable is set to `true` if motors are active.
+  1.name = /communication_handler/deactivate_motors
+  1.type = qb_device_srvs/Trigger
+  1.desc = Deactivates the motors of the device which ID is specified in the service request. The response `success` variable is set to `true` if motors are inactive.
+  2.name = /communication_handler/deregister_device
+  2.type = qb_device_srvs/Trigger
+  2.desc = Deregisters the device which ID is specified in the service request from the Communication Handler; it will not be able to request anymore services until a new registration is performed. Does nothing if the device was not already registered.
+  3.name = /communication_handler/get_info
+  3.type = qb_device_srvs/Trigger
+  3.desc = Retrieves the printable configuration setup of the device which ID is specified in the service request. On error, the response `message` variable is empty.
+  4.name = /communication_handler/get_measurements
+  4.type = qb_device_srvs/GetMeasurements
+  4.desc = Retrieves the motor positions and currents of the device which ID is specified in the service request. The response `success` variable is set to `true` if data retrieved (i.e. the response `currents` and `positions` variables) is meaningful.
+  5.name = /communication_handler/register_device
+  5.type = qb_device_srvs/RegisterDevice
+  5.desc = Registers the device which ID is specified in the service request to the Communication Handler (i.e. it will be able to request any of the services provided by this node); if requested, activates the device motors. A physical device configured with the same ID has to be connected through any serial port to the handler itself. The response `success` variable is set to `true` if the whole registration process ends with no failures.
+  6.name = /communication_handler/set_commands
+  6.type = qb_device_srvs/SetCommands
+  6.desc = Send the reference commands (i.e. the request `commands` variable) to the motors of the device which ID is specified in the service request.
+}
+}}}
+
+## CategoryPackage

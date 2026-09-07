@@ -1,0 +1,60 @@
+<<PackageHeader(qb_device_control)>>
+<<TOC(4)>>
+
+This package is barely usable alone since it provides only the common features to be exploited and expanded in the derived packages (cf. [[qb_hand]] and [[qb_move]]).
+
+== Launch files ==
+
+<<Anchor(controllers_bringup)>>
+{{{
+#!clearsilver CS/NodeAPI
+name = spawner_template
+desc = This launch file loads the controller parameters (i.e. the given yaml file) to the Parameter Server and spawns them in the [[controller_manager]]. If specified, starts the [[rqt_joint_trajectory_controller]] GUI.
+param {
+  0.name = controllers
+  0.type = string
+  0.desc = The list of names of the controllers to be spawned (e.g. `*_trajectory_controller`)
+  1.name = namespace
+  1.type = string
+  1.desc = The namespace prefix (without "_controllers.yaml") of the controller configuration file, necessary with many devices (e.g. `my_device` if it is `my_device_controllers.yaml`). The file must be located in the `config/` subdirectory of the selected `_control` package. In addition, the joint names inside should be consistent with the ones specified in the description bringup, usually the share the same namespace.
+  2.name = package_prefix
+  2.type = string
+  2.desc = The base package name prefix (without "_control") where controller settings are stored (e.g. `qb_device` if it is `qb_device_control`).
+  3.name = use_controller_gui
+  3.type = bool
+  3.desc = Selects whether to load joint trajectory controller GUI.
+  3.default = false
+}
+}}}
+
+== API ==
+
+{{{
+#!clearsilver CS/NodeAPI
+name = qb_device_control
+desc = This device-independent library provides all the common structures to control both the [[qb_hand]] and the [[qb_move]] devices. It exploits the [[qb_device_hardware_interface]] and thus requires all the ROS resources related to it.
+act_called {
+  0.name = ~<namespaced_action_type>_trajectory_controller/follow_joint_trajectory
+  0.type = control_msgs/FollowJointTrajectory
+  0.desc = The control action advertised by the [[controller_manager]] relative to the controller in use.
+}
+param {
+  0.name = ~namespaced_action_type
+  0.type = string
+  0.desc = The namespaced type of the control action advertised by the [[controller_manager]] without the "_trajectory_controller/follow_joint_trajectory" suffix (e.g. `device_foo` if it is `device_foo_trajectory_controller/follow_joint_trajectory`).
+  1.name = ~control_duration
+  1.type = double
+  1.desc = The duration of the control loop, in [s].
+  1.default = 0.01
+  2.name = ~waypoints
+  2.type = list of maps
+  2.desc = The list of waypoint. Each contains a `time` array, which can be either a single value or an interval for which all the specified `joint_positions` hold, and a `joint_positions` map, which pairs contain the device namespace (i.e. the map key) associated with the relative joint positions array. If a namespace used before is not specified for a given waypoint, it is assumed that it does not change the device configuration. Nonetheless for critical applications it is recommended to specify every namespaces to avoid interpolation approximations.
+}
+srv_called {
+  0.name = /communication_handler/sync_nodes
+  0.type = qb_device_srvs/Trigger
+  0.desc = Checks if all the already registered devices are completely initialized and ready for the control application; a device node is considered ready if it has requested this service at least once. The response `success` variable is set to `true` if all the control nodes are ready.
+}
+}}}
+
+## CategoryPackage

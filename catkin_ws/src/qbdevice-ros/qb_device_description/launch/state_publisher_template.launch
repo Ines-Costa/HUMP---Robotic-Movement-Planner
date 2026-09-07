@@ -1,0 +1,29 @@
+<launch>
+  <arg name="frequency" default="100" doc="The frequency of the two state publishers."/>
+  <arg name="robot_name" doc="The unique robot name."/>
+  <arg name="robot_package" doc="The base package name prefix for the robot configurations [urdf, rviz, ...]."/>
+  <arg name="source_list" default="[joint_states]" doc="The joint_states source list for the joint_state_publisher."/>
+  <arg name="use_rviz" default="true" doc="Choose whether or not to use rviz."/>
+
+  <!-- make joint values available -->
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher"
+        respawn="false" output="log">
+    <param name="rate" value="$(arg frequency)"/>
+    <rosparam param="source_list" subst_value="true">$(arg source_list)</rosparam>
+    <param name="use_gui" value="true"/>
+    <param name="use_mimic_tags" value="true"/>
+  </node>
+  <!-- convert joint states to TF transforms for rviz, etc -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"
+        respawn="false" output="log">
+    <remap from="/joint_states" to="joint_states"/>
+    <param name="ignore_timestamp" value="false"/>
+    <param name="publish_frequency" value="$(arg frequency)"/>
+    <param name="tf_prefix" value=""/>
+  </node>
+  <!-- load rviz -->
+  <node name="rviz" pkg="rviz" type="rviz"
+        respawn="false" output="log"
+        args="$(eval '-d ' + find(robot_package + '_description') + '/rviz/' + robot_name + '.rviz')"
+        if="$(arg use_rviz)"/>
+</launch>

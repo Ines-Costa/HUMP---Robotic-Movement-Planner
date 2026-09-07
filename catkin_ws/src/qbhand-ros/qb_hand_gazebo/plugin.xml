@@ -1,0 +1,11 @@
+<class_libraries>
+  <library path="libqb_hand_gazebo_hardware_interface">
+    <class name="qb_hand_gazebo_hardware_interface/qbHandHWSim"
+           type="qb_hand_gazebo_hardware_interface::qbHandHWSim"
+           base_class_type="gazebo_ros_control::RobotHWSim">
+      <description>
+        A type of RobotHWSim
+      </description>
+    </class>
+  </library>
+</class_libraries>

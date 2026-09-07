@@ -1,0 +1,8 @@
+<launch>
+  <arg name="use_specific_serial_port" default="false" doc="Choose whether or not to use a specific serial port."/>
+  <arg name="serial_port_name" default="/tmp/ttyUSB0" if="$(arg use_specific_serial_port)" doc="The name of the specific serial port on which the qbhand is connected"/>
+  <node name="qb_device_communication_handler" pkg="qb_device_driver" type="qb_device_communication_handler"
+        respawn="false" required="true" output="screen" >
+      <param name="serial_port_name" value="$(arg serial_port_name)" if="$(arg use_specific_serial_port)"/>
+  </node>
+</launch>

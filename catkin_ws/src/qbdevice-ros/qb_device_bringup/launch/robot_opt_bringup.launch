@@ -1,0 +1,21 @@
+<launch>
+  <arg name="robot_name" doc="The unique robot name."/>
+  <arg name="robot_package" doc="The base package name prefix for the robot configurations [urdf, rviz, ...]."/>
+  <arg name="use_controller_gui" default="false" doc="Choose whether or not to use the controller GUI."/>
+  <arg name="use_interactive_markers" default="false" doc="Choose whether or not to use interactive markers on rviz."/>
+  <arg name="use_joint_limits" default="false" doc="Choose whether or not to use the robot joint limits."/>
+  <arg name="use_waypoints" default="false" doc="Choose whether or not to use the waypoint references."/>
+
+  <!-- robot joint limits -->
+  <rosparam file="$(eval find(robot_package + '_control') + '/config/' + robot_name + '_joint_limits.yaml')" command="load" if="$(arg use_joint_limits)"/>
+
+  <!-- controller gui spawner -->
+  <node name="controller_gui" pkg="rqt_joint_trajectory_controller" type="rqt_joint_trajectory_controller" respawn="false" required="true" output="screen" if="$(arg use_controller_gui)"/>
+
+  <!-- interactive marker settings -->
+  <param name="use_interactive_markers" type="bool" value="$(arg use_interactive_markers)"/>
+
+  <!-- waypoint settings -->
+  <param name="use_waypoints" type="bool" value="$(arg use_waypoints)"/>
+  <rosparam file="$(eval find(robot_package + '_control') + '/config/' + robot_name + '_waypoints.yaml')" command="load" if="$(arg use_waypoints)"/>
+</launch>

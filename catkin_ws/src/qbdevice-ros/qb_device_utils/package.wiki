@@ -1,0 +1,6 @@
+<<PackageHeader(qb_device_utils)>>
+<<TOC(4)>>
+
+This package is barely usable alone since it provides only few utilities to be exploited and expanded in the derived packages (cf. [[qb_hand]] and [[qb_move]]).
+
+## CategoryPackage
