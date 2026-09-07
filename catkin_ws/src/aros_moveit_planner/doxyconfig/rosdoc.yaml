@@ -1,0 +1,8 @@
+- builder: doxygen
+  name: The aros_moveit_planner documentation
+  output_dir:  aros_moveit_planner_doc
+  file_patterns: '*.c *.cpp *.h *.hpp *.hh *.cc'
+  homepage: https://github.com/zohannn/aros_moveit_planner
+  description: The aros_moveit_planner package
+  license: MIT
+  maintainers: Gianpaolo Gulletta <gianpaologulletta@gmail.com>
