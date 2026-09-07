@@ -1,0 +1,6 @@
+devel_space: /home/ines/HUMP/devel
+install: false
+install_space: /home/ines/HUMP/install
+profile: default
+source_space: /home/ines/HUMP/src
+workspace: /home/ines/HUMP

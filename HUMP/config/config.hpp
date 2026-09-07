@@ -1,0 +1,24 @@
+// *** Settings of the humanoid *** //
+
+// Head
+//#define HEAD 
+//#define NECK 
+// Pelvis
+//#define PELVIS 
+// Right leg
+//#define RIGHT_UPPER_LEG 
+//#define RIGHT_LOWER_LEG 
+//#define RIGHT_FOOT 
+// Left leg
+//#define LEFT_UPPER_LEG 
+//#define LEFT_LOWER_LEG 
+//#define LEFT_FOOT 
+// Hand
+//#define HAND 
+
+//TB
+#define TB 0.5
+//AMPL
+//#define AMPL 1
+#define AMPL_PATH "/home/ines/AMPL"
+
