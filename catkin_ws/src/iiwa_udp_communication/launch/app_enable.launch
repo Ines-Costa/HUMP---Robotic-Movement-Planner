@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="robot_name" default="iiwa" />
+    <arg name="robot_ip" default="172.31.1.147"/>
+    <arg name="robot_socket" default="30300"/>
+    <arg name="own_socket" default="30333"/>
+    <arg name="timeout" default="3.0"/>
+
+    <group ns="$(arg robot_name)">
+        <node name="iiwa_app_enable" pkg="iiwa_udp_communication" type="app_enable" output="screen" >
+            <param name="robot_ip" value="$(arg robot_ip)"/>
+            <param name="robot_socket" value="$(arg robot_socket)"/>
+            <param name="own_socket" value="$(arg own_socket)"/>
+            <param name="timeout" value="$(arg timeout)"/>
+        </node>
+    </group>
+</launch>

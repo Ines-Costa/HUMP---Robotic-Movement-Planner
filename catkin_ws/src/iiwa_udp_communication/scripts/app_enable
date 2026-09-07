@@ -1,0 +1,21 @@
+#!/usr/bin/env python
+
+import rospy
+from iiwa_udp_communication import IiwaAutoEnabler
+from socket import timeout
+
+
+def main():
+    rospy.init_node("iiwa_enable_auto_mode")
+
+    try:
+        enabler = IiwaAutoEnabler()
+    except timeout:
+        exit(1)
+
+    rospy.loginfo("Enabling auto mode. Press ctrl+c to disable")
+    enabler.enable()
+
+
+if __name__ == '__main__':
+    main()

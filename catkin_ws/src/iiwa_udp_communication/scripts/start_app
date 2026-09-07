@@ -1,0 +1,25 @@
+#!/usr/bin/env python
+
+import rospy
+from iiwa_udp_communication import IiwaMessengerROS
+from socket import timeout
+
+
+def main():
+    rospy.init_node("iiwa_start_app")
+
+    try:
+        messenger = IiwaMessengerROS()
+    except timeout:
+        exit(1)
+
+    # start application by sending a rising edge
+    # (false->true) for App_Start
+    messenger.send_message("App_Start;false")
+    messenger.send_message("App_Start;true")
+
+    rospy.loginfo("Start message sent")
+
+
+if __name__ == '__main__':
+    main()
