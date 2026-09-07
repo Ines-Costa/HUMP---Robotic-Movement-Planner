@@ -1,0 +1,736 @@
+/*****************************************************************************
+** Ifdefs
+*****************************************************************************/
+
+#ifndef motion_manager_QNODE_HPP_
+#define motion_manager_QNODE_HPP_
+
+/*****************************************************************************
+** Includes
+*****************************************************************************/
+
+#include <ros/ros.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/TwistStamped.h>
+#include <sensor_msgs/JointState.h>
+#include <unordered_map>
+#include <string>
+#include <std_msgs/String.h>
+
+#include <std_msgs/MultiArrayLayout.h>
+#include <std_msgs/MultiArrayDimension.h>
+#include <std_msgs/Float32MultiArray.h>
+
+#include <open_close_bh/OpenClose_BH.h>
+
+#include <QThread>
+#include <QStringListModel>
+#include <vrep_common/VrepInfo.h>
+#include <vrep_common/ProximitySensorData.h>
+#include <algorithm>
+
+#include "config.hpp"
+#include "task.hpp"
+#include "scenario.hpp"
+
+
+namespace motion_manager {
+
+using namespace std;
+
+typedef boost::shared_ptr<Scenario> scenarioPtr;/**< shared pointer to the current scenario */
+typedef boost::shared_ptr<Task> taskPtr; /**< shared pointer to the current task */
+
+
+const double MIN_EXEC_TIMESTEP_VALUE = 0.3; /**< minimum value of the timestep during the execution of the movement [sec]. It is used to join the stages of the movements when timestep is zero*/
+
+//! The QNode class
+/**
+ * @brief This method defines the ROS node and its functionalities
+ */
+class QNode : public QThread
+{
+    Q_OBJECT
+public:
+        /**
+         * @brief QNode, a constructor
+         * @param argc
+         * @param argv
+         */
+         QNode(int argc, char** argv );
+
+        /**
+         * @brief ~QNode, a destructor
+         */
+        virtual ~QNode();
+
+        /**
+         * @brief This method initializates the node
+         * @return
+         */
+        bool on_init();
+
+        /**
+         * @brief This method initializates the node
+         * @param master_url
+         * @param host_url
+         * @return
+         */
+        bool on_init_url(const string &master_url, const string &host_url);
+
+        /**
+         * @brief This method runs ending operations
+         */
+        void on_end();
+
+        /**
+         * @brief This method checks if V-REP is online
+         * @return
+         */
+        bool checkVrep();
+
+        /**
+         * @brief This method checks if RViz is online
+         * @return
+         */
+        bool checkRViz();
+
+        /**
+         * @brief getTypeHands
+         */
+        bool getTypeHands();
+
+        /**
+         * @brief This method loads the scenario with index id
+         * @param path
+         * @param id
+         * @return
+         */
+        bool loadScenario(const string &path,int id);
+
+        /**
+         * @brief getHandCodeRight
+         * @return
+         */
+        int getHandCodeRight();
+
+        /**
+         * @brief getHandCodeLeft
+         * @return
+         */
+        int getHandCodeLeft();
+
+        /**
+         * @brief updateTargetsPosOr
+         * @param obj_name
+         */
+        void updateTargetsPosOr(string obj_name);
+
+        /**
+         * @brief This method gets the elements of the scenario
+         * @param scene
+         * @return
+         */
+        bool getElements(scenarioPtr scene);
+
+        /**
+         * @brief getArmsHandles
+         * @param humanoid
+         * @return
+         */
+        bool getArmsHandles(int humanoid); // get the handles of both arms
+
+        /**
+         * @brief getscene
+         * @return
+         */
+        scenarioPtr getscene();
+
+
+        /**
+         * @brief execMovement
+         * @param traj_mov
+         * @param vel_mov
+         * @param timesteps
+         * @param tols_stop
+         * @param traj_descr
+         * @param mov
+         * @param scene
+         * @param vel_mode
+         * @return
+         */
+        bool execMovement(vector<MatrixXd>& traj_mov, vector<MatrixXd>& vel_mov,
+                          std::vector<std::vector<double> > timesteps, vector<double> tols_stop,
+                          std::vector<string>& traj_descr, movementPtr mov, scenarioPtr scene, bool vel_mode);
+
+        /**
+         * @brief execTask
+         * @param traj_task
+         * @param vel_task
+         * @param timesteps_task
+         * @param tols_stop_task
+         * @param traj_descr_task
+         * @param task
+         * @param scene
+         * @param vel_mode
+         * @return
+         */
+        bool execTask(vector<vector<MatrixXd>>& traj_task, vector<vector<MatrixXd>>& vel_task,
+                      vector<vector<vector<double> > > &timesteps_task, vector<vector<double>>& tols_stop_task,
+                      vector<vector<string>>& traj_descr_task,taskPtr task, scenarioPtr scene, bool vel_mode);
+
+        /**
+         * @brief execTask_complete
+         * @param traj_task
+         * @param vel_task
+         * @param timesteps_task
+         * @param tols_stop_task
+         * @param traj_descr_task
+         * @param task
+         * @param scene
+         * @param vel_mode
+         * @return
+         */
+        bool execTask_complete(vector<vector<MatrixXd>>& traj_task, vector<vector<MatrixXd>>& vel_task,
+                               vector<vector<vector<double> > > &timesteps_task, vector<vector<double>>& tols_stop_task,
+                               vector<vector<string>>& traj_descr_task, taskPtr task, scenarioPtr scene, bool vel_mode);
+        
+        /**
+         * @brief This method sets to zero the time of simulation
+         */
+        void resetSimTime();
+
+        /**
+         * @brief This method resets some global variables
+         */
+        void resetGlobals();
+
+        /**
+         * @brief This methods starts the simulation in V-REP
+         */
+        void startSim();
+
+        /**
+         * @brief This method stops the simulation in V-REP
+         */
+        void stopSim();
+
+        /**
+         * @brief This method pauses the simulation in V-REP
+         */
+        void pauseSim();
+
+        /**
+         * @brief getSimTime
+         * @return
+         */
+        double getSimTime();
+
+        /**
+         * @brief getSimTimePaused
+         * @return
+         */
+        double getSimTimePaused();
+
+        /**
+         * @brief getSimTimeStep
+         * @return
+         */
+        double getSimTimeStep();
+
+        /**
+         * @brief getNodeName
+         * @return
+         */
+        string getNodeName();
+
+        /**
+         * @brief isSimulationRunning
+         * @return
+         */
+        bool isSimulationRunning();
+
+        /**
+         * @brief isSimulationPaused
+         * @return
+         */
+        bool isSimulationPaused();
+
+
+        void enableSetJoints();
+
+        /**
+         * @brief This is the run() method of the thread
+         */
+        void run();
+
+
+        /**
+         * @brief This enumerator is used for logging functionalities
+         */
+  enum LogLevel {
+           Debug,
+           Info,
+           Warn,
+           Error,
+           Fatal
+   };
+
+        /**
+         * @brief This method return the list of loggings
+         * @return
+         */
+        QStringListModel* loggingModel() { return &logging_model; }
+
+        /**
+         * @brief This method runs logging of the passed message
+         * @param level
+         * @param msg
+         */
+        void log( const LogLevel &level, const string &msg);
+
+        /**
+         * @brief checkProximityObject
+         * @param mov
+         * @param stage
+         */
+        void checkProximityObject(movementPtr mov, string stage);
+
+        /**
+         * @brief This method closes the Barrett hand
+         * @param hand
+         * @return
+         */
+        bool closeBarrettHand(int hand);
+
+        /**
+         * @brief This method opens the Barrett hand
+         * @param hand
+         * @return
+         */
+        bool openBarrettHand(int hand);
+
+        /**
+         * @brief openBarrettHand_to_pos
+         * @param hand
+         * @param hand_posture
+         * @return
+         */
+        bool openBarrettHand_to_pos(int hand, std::vector<double>& hand_posture);
+
+        /**
+         * @brief closeBarrettHand_to_pos
+         * @param hand
+         * @param hand_posture
+         * @return
+         */
+        bool closeBarrettHand_to_pos(int hand, std::vector<double>& hand_posture);
+
+        /**
+         * @brief getSimRobot
+         * @return
+         */
+        bool getSimRobot();
+
+        /**
+         * @brief setSimRobot
+         * @param sr
+         */
+        void setSimRobot(bool sr);
+
+        /**
+         * @brief open_close_BH
+         * @param close
+         * @return
+         */
+        bool open_close_BH(bool close);
+
+        /**
+         * @brief reset_open_close_BH
+         */
+        void reset_open_close_BH();
+
+
+
+Q_SIGNALS:
+        /**
+         * @brief This signal is used to adjust the scrollbar of the logging list
+         */
+  void loggingUpdated();
+
+        /**
+         * @brief This signal is used to close the main window
+         */
+        void rosShutdown();
+
+        /**
+         * @brief This method signals that a new element is part of the scenario
+         * @param value
+         */
+        void newElement(string value);
+
+        /**
+         * @brief updateElement
+         * @param id
+         * @param value
+         */
+        void updateElement(int id,string value);
+
+        /**
+         * @brief This method signals a new object in the scenario
+         * @param value
+         */
+        void newObject(string value);
+
+        /**
+         * @brief This method signals a new pose in the scenario
+         * @param value
+         */
+        void newPose(string value);
+
+        /**
+         * @brief This method signals a new target in the scenario
+         * @param value
+         */
+        void newTarget(string value);
+
+        /**
+         * @brief This method signals that a new joint is part of the humanoid
+         * @param value
+         */
+        void newJoint(string value);
+
+
+
+private:
+
+        // members
+        int init_argc; /**< initial argc */
+        char** init_argv; /**< initial argv */
+        ros::ServiceClient add_client;/**<  ROS client */
+        ros::Subscriber subInfo; /**< ROS subscriber for information about the simulation */
+        ros::Subscriber subJoints_state; /**< ROS subscriber to the topic /vrep/joints_state */
+        ros::Subscriber subJoints_state_real; /**< ROS subscriber to the topic /ARoS/joints_state */
+        ros::Subscriber subRightProxSensor;/**< ROS subscriber to the topic /vrep/right_prox_sensor */
+        ros::Subscriber subLeftProxSensor; /**< ROS subscriber to the topic /vrep/left_prox_sensor */
+        ros::Subscriber subRightHandPos; /**< ROS subscriber to the topic /vrep/right_hand_pose */
+        ros::Subscriber subRightHandVel; /**< ROS subscriber to the topic /vrep/right_hand_vel */
+        ros::Subscriber subLeftHandPos; /**< ROS subscriber to the topic /vrep/left_hand_pose */
+        ros::Subscriber subLeftHandVel; /**< ROS subscriber to the topic /vrep/left_hand_vel */
+
+        unordered_map<string, int> hand_map = {
+            {"HumanHand", 0},
+            {"BarretHand", 1},
+            {"Electric Gripper", 2},
+            {"QbSoftHand", 3}
+        };
+
+        ros::Subscriber subRolosCozinha;        /**< ROS subscriber to the topic /vrep/Rolos_cozinha_pose (obj_id=0) */
+        ros::Subscriber subTargetsRolosCozinha; /**< ROS subscriber to the topic /vrep/Rolos_cozinha_Targets_info */
+        std::vector<float> received_targets_Rolos_Cozinha_data;
+
+        ros::Subscriber subPastilhasMaqLoica14;        /**< ROS subscriber to the topic /vrep/Pastilhas_maq_loica14_pose (obj_id=1) */
+        ros::Subscriber subTargetsPastilhasMaqLoica14; /**< ROS subscriber to the topic /vrep/Pastilhas_Maq_Loica_14_Targets_info */
+        std::vector<float> received_targets_Pastilhas_Maq_Loica_14_data;
+
+        ros::Subscriber subDetergenteMaqLoica10;        /**< ROS subscriber to the topic /vrep/detergente_maq_loica10_pose (obj_id=2) */
+        ros::Subscriber subTargetsDetergenteMaqLoica10; /**< ROS subscriber to the topic /vrep/detergente_Maq_Loica_10_Targets_info */
+        std::vector<float> received_targets_Detergente_Maq_Loica_10_data;
+
+        ros::Subscriber subShelf1;        /**< ROS subscriber to the topic /vrep/Shelf1_pose */
+        ros::Subscriber subShelf2;        /**< ROS subscriber to the topic /vrep/Shelf2_pose */
+        ros::Subscriber subShelf3;        /**< ROS subscriber to the topic /vrep/Shelf3_pose */
+        ros::Subscriber subShelf4;        /**< ROS subscriber to the topic /vrep/Shelf4_pose */
+
+        ros::Subscriber subTable;        /**< ROS subscriber to the topic /vrep/Table_right_pose */
+
+        ros::Subscriber subCup;           /**< ROS subscriber to the topic /vrep/Cup_pose */
+
+        //Environment2
+        ros::Subscriber subCup1_4;            /**< ROS subscriber to the topic /vrep/Cup1_4_pose */
+        ros::Subscriber subCup1_8;            /**< ROS subscriber to the topic /vrep/Cup1_8_pose */
+        ros::Subscriber subCup1_12;            /**< ROS subscriber to the topic /vrep/Cup1_12_pose */
+        ros::Subscriber subCup1_16;            /**< ROS subscriber to the topic /vrep/Cup1_16_pose */
+        ros::Subscriber subCup1_19;            /**< ROS subscriber to the topic /vrep/Cup1_19_pose */
+        ros::Subscriber subCup2_4;            /**< ROS subscriber to the topic /vrep/Cup2_4_pose */
+        ros::Subscriber subCup2_8;            /**< ROS subscriber to the topic /vrep/Cup2_8_pose */
+        ros::Subscriber subCup2_12;            /**< ROS subscriber to the topic /vrep/Cup2_12_pose */
+        ros::Subscriber subCup2_16;            /**< ROS subscriber to the topic /vrep/Cup2_16_pose */
+        ros::Subscriber subCup2_19;            /**< ROS subscriber to the topic /vrep/Cup2_19_pose */
+        //ros::Subscriber subCup3_4;            /**< ROS subscriber to the topic /vrep/Cup3_4_pose */
+        //ros::Subscriber subCup3_8;            /**< ROS subscriber to the topic /vrep/Cup3_8_pose */
+        //ros::Subscriber subCup3_12;            /**< ROS subscriber to the topic /vrep/Cup3_12_pose */
+        //ros::Subscriber subCup3_16;            /**< ROS subscriber to the topic /vrep/Cup3_16_pose */
+        //ros::Subscriber subCup3_19;            /**< ROS subscriber to the topic /vrep/Cup3_19_pose */
+
+        //Environment3
+        ros::Subscriber subCup1;           /**< ROS subscriber to the topic /vrep/Cup1_pose */
+        ros::Subscriber subCup2;           /**< ROS subscriber to the topic /vrep/Cup2_pose */
+        ros::Subscriber subCup3;           /**< ROS subscriber to the topic /vrep/Cup3_pose */
+
+        //Environment4
+        ros::Subscriber subPerson;          /**< ROS subscriber to the topic /vrep/Person_pose */
+
+        ros::Subscriber subTargetsCup; /**< ROS subscriber to the topic /vrep/detergente_Maq_Loica_10_Targets_info */
+        std::vector<float> received_targets_Cup_data;
+
+        QStringListModel logging_model; /**< list of loggings */
+        bool simulationRunning; /**< true if the simulation in V-REP is running */
+        bool simulationPaused; /**< true if the simulation is paused*/
+        double simulationTime;/**< current time of the simulation */
+        double simulationTimePaused;/**< time of the simulation when it has paused*/
+        double simulationTimeStep;/**< current time step of the simulation */
+        string nodeName; /**< name of the ROS node */
+        double TotalTime; /**< total time of the movements */
+        scenarioPtr curr_scene; /**< current scenario */
+        movementPtr curr_mov; /**< current movement that is being executed */
+        src::severity_logger< severity_level > lg; /**< logger */
+        int right_sensor; /**< handle of the right hand proximity sensor */
+        int left_sensor; /**< handle of the left hand proximity sensor */
+        int h_detobj; /**< handle of the object that is currently detected by the proximity sensor of the end effector */
+        int r_h_detobj; /**< handle of the object that is currently detected by the proximity sensor of the right end effector */
+        int l_h_detobj; /**< handle of the object that is currently detected by the proximity sensor of the left end effector */
+        int right_attach; /**< right hand attach point */
+        int left_attach; /**< left hand attach point */
+        bool got_scene; /**< true if we got all the elements of the scenario */
+        bool obj_in_hand; /**< true if the object is in the hand */
+        bool obj_in_r_hand; /**< true if the object is in the right hand */
+        bool obj_in_l_hand; /**< true if the object is in the left hand */
+        std::vector<int> right_handles; /**< right arm and right hand joints handles */
+        std::vector<int> left_handles; /**< left arm and left hand joints handles */
+        std::vector<double> right_2hand_pos; /**< position of the right hand 2 phalanx */
+        std::vector<double> right_2hand_vel; /**< velocity of the right hand 2 phalanx */
+        std::vector<double> right_2hand_force; /**< forces of the right hand 2 phalanx */
+        std::vector<double> left_2hand_pos; /**< position of the left hand 2 phalanx */
+        std::vector<double> left_2hand_vel; /**< velocity of the left hand 2 phalanx */
+        std::vector<double> left_2hand_force; /**< forces of the left hand 2 phalanx */
+        bool sim_robot; /**< true if the robot is simulated, false if the robot is real */
+
+        std::vector<bool> firstPartLocked;
+        std::vector<int> needFullOpening;
+        std::vector<bool> closed_vector;
+        MatrixXi right_hand_handles; /**< matrix of the handles of the right hand joints */
+        MatrixXi left_hand_handles; /**< matrix of the handles of the left hand joints */
+
+        bool closed;
+        int hand_code_right, hand_code_left;
+        bool hand_closed; /**< true if the hand of the robot ARoS is closed, false otherwise*/
+
+        //methods
+
+        /**
+         * @brief This method gets the current date and time already formatted
+         * @return
+         */
+        const string currentDateTime();
+
+        /**
+         * @brief This is the callback to retrieve information about the simulation in V-REP
+         * @param info
+         */
+        void infoCallback(const vrep_common::VrepInfoConstPtr& info);
+
+        /**
+         * @brief This is the callback to retrieve the state of the joints from vrep
+         * @param state
+         */
+        void JointsCallback(const sensor_msgs::JointState& state);
+
+        /**
+         * @brief This is the callback to retrieve the state of the joints from the real robot ARoS
+         * @param state
+         */
+        void JointsRealCallback(const sensor_msgs::JointState& state);
+
+        /**
+         * @brief This is the callback to retrieve the state of the proximity sensor on the right end-effector
+         * @param data
+         */
+        void rightProxCallback(const vrep_common::ProximitySensorData& data);
+
+        /**
+         * @brief This is the callback to retrieve the state of the proximity sensor on the left end-effector
+         * @param data
+         */
+        void leftProxCallback(const vrep_common::ProximitySensorData& data);
+
+        /**
+         * @brief rightHandPosCallback
+         * @param data
+         */
+        void rightHandPosCallback(const geometry_msgs::PoseStamped& data);
+
+        /**
+         * @brief rightHandVelCallback
+         * @param data
+         */
+        void rightHandVelCallback(const geometry_msgs::TwistStamped& data);
+
+        /**
+         * @brief leftHandPosCallback
+         * @param data
+         */
+        void leftHandPosCallback(const geometry_msgs::PoseStamped& data);
+
+        /**
+         * @brief leftHandVelCallback
+         * @param data
+         */
+        void leftHandVelCallback(const geometry_msgs::TwistStamped& data);
+
+          /**
+           * @brief This creates the vector with all the possible poses for the QbSoftHand
+           * @param data
+           */
+          void init_HandPoses(qbsofthand& Robot_hand);
+
+          /**
+            * @brief This is the callback to retrieve the state of the Rolos_cozinha
+            * @param data
+            */
+          void RolosCozinhaCallback(const geometry_msgs::PoseStamped& data);
+
+          /**
+           * @brief targetsRolosCozinhaCallback
+           * @param data
+           */
+          void targetsRolosCozinhaCallback(const  std_msgs::Float32MultiArray &targetsdata);
+
+          /**
+            * @brief This is the callback to retrieve the state of the Pastilhas_maq_loica14
+            * @param data
+            */
+          void PastilhasMaqLoicaCallback(const geometry_msgs::PoseStamped& data);
+
+          /**
+           * @brief targetsPastilhasMaqLoica14Callback
+           * @param targetsdata
+           */
+          void targetsPastilhasMaqLoica14Callback(const  std_msgs::Float32MultiArray &targetsdata);
+
+          /**
+           * @brief targetsDetergenteMaqLoica10Callback
+           * @param targetsdata
+           */
+          void targetsDetergenteMaqLoica10Callback(const  std_msgs::Float32MultiArray &targetsdata);
+
+          /**
+           * @brief targetsCupCallback
+           * @param targetData
+           */
+          void targetsCupCallback(const std_msgs::Float32MultiArray &targetData);
+
+          /**
+            * @brief This is the callback to retrieve the state of the detergente_maq_loica10
+            * @param data
+            */
+          void DetergenteMaqLoicaCallback(const geometry_msgs::PoseStamped& data);
+
+          /**
+           * @brief CupCallback
+           * @param data
+           */
+          void CupCallback(const geometry_msgs::PoseStamped& data);
+
+          /**
+            * @brief This is the callback to retrieve the state of the Shelf1
+            * @param data
+            */
+          void Shelf1Callback(const geometry_msgs::PoseStamped& data);
+
+          /**
+            * @brief This is the callback to retrieve the state of the Shelf2
+            * @param data
+            */
+          void Shelf2Callback(const geometry_msgs::PoseStamped& data);
+
+          /**
+            * @brief This is the callback to retrieve the state of the Shelf3
+            * @param data
+            */
+          void Shelf3Callback(const geometry_msgs::PoseStamped& data);
+
+          /**
+            * @brief This is the callback to retrieve the state of the Shelf4
+            * @param data
+            */
+          void Shelf4Callback(const geometry_msgs::PoseStamped& data);
+
+          /**
+            * @brief This is the callback to retrieve the state of the Table
+            * @param data
+            */
+          void TableCallback(const geometry_msgs::PoseStamped& data);
+
+          //Environment2
+          void Cup1_4_Callback(const geometry_msgs::PoseStamped& data);
+          void Cup1_8_Callback(const geometry_msgs::PoseStamped& data);
+          void Cup1_12_Callback(const geometry_msgs::PoseStamped& data);
+          void Cup1_16_Callback(const geometry_msgs::PoseStamped& data);
+          void Cup1_19_Callback(const geometry_msgs::PoseStamped& data);
+          void Cup2_4_Callback(const geometry_msgs::PoseStamped& data);
+          void Cup2_8_Callback(const geometry_msgs::PoseStamped& data);
+          void Cup2_12_Callback(const geometry_msgs::PoseStamped& data);
+          void Cup2_16_Callback(const geometry_msgs::PoseStamped& data);
+          void Cup2_19_Callback(const geometry_msgs::PoseStamped& data);
+          /*void Cup3_4_Callback(const geometry_msgs::PoseStamped& data);
+          void Cup3_8_Callback(const geometry_msgs::PoseStamped& data);
+          void Cup3_12_Callback(const geometry_msgs::PoseStamped& data);
+          void Cup3_16_Callback(const geometry_msgs::PoseStamped& data);
+          void Cup3_19_Callback(const geometry_msgs::PoseStamped& data);*/
+
+          //Environment3
+          void Cup1Callback(const geometry_msgs::PoseStamped& data);
+          void Cup2Callback(const geometry_msgs::PoseStamped& data);
+          void Cup3Callback(const geometry_msgs::PoseStamped& data);
+
+          //Environment
+          void PersonCallback(const geometry_msgs::PoseStamped& data);
+
+        /**
+         * @brief This method returns the linear interpolation
+         * @param ya
+         * @param yb
+         * @param m
+         * @return
+         */
+        double interpolate(double ya, double yb, double m);
+
+        /**
+         * @brief This method initializate the logging
+         */
+        void init();
+
+        // Controlling --------------------------------------
+
+        void Target_pose_Callback(const geometry_msgs::PoseStamped& data);
+
+        /**
+         * @brief This method return the RPY values starting from the transformation matrix
+         * @param Trans
+         * @param rpy
+         * @return
+         */
+        bool getRPY(Matrix4d Trans, std::vector<double>& rpy);
+
+        /**
+         * @brief RPY_matrix
+         * @param rpy
+         * @param Rot
+         */
+        void RPY_matrix(std::vector<double>rpy, Matrix3d &Rot);
+
+        /**
+         * @brief This method update the information of a generic object in V-REP
+         * @param obj_id
+         * @param name
+         * @param data
+         */
+        void updateObjectInfo(int obj_id,std::string name, const geometry_msgs::PoseStamped &data);
+
+
+};
+
+}  // namespace motion_manager
+
+#endif /* motion_manager_QNODE_HPP_ */
